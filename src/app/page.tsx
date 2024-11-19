@@ -124,9 +124,14 @@ export default function Home() {
 
         if (error) throw error;
         setTeams(teams);
-      } catch (err: any) {
-        setError("Failed to load teams. Please try again.");
-        console.error("Error fetching teams:", err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError("Failed to load teams. Please try again.");
+          console.error("Error fetching teams:", err.message);
+        } else {
+          setError("Failed to load teams. Please try again.");
+          console.error("Unknown error:", err);
+        }
       }
     };
 
@@ -140,29 +145,41 @@ export default function Home() {
 
         if (error) throw error;
         setMatches(matches);
-      } catch (err: any) {
-        setError("Failed to load matches. Please try again.");
-        console.error("Error fetching matches:", err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError("Failed to load matches. Please try again.");
+          console.error("Error fetching matches:", err.message);
+        } else {
+          setError("Failed to load matches. Please try again.");
+          console.error("Unknown error:", err);
+        }
       }
     };
 
     const fetchData = async () => {
       setLoading(true);
-      setShowLoading(true);
 
       try {
         await Promise.all([fetchTeams(), fetchMatches()]);
       } finally {
         setLoading(false);
-        // Wait for the loading to finish before fading out
         setTimeout(() => {
-          setShowLoading(false); // Trigger fade-out after a slight delay
-        }, 300); // You can adjust this delay (300ms) for smoother transition
+          setShowLoading(false); // Trigger fade-out after 2 seconds
+        }, 2000); // 2000ms (2 seconds) delay for the fade-out
       }
     };
 
+    // Start fetching data and ensure loading screen stays for at least 2 seconds
     fetchData();
-  }, []);
+
+    // Set the loading screen to disappear after 2 seconds delay
+    const loadingTimeout = setTimeout(() => {
+      setShowLoading(false);
+    }, 2000);
+
+    // Cleanup on unmount
+    return () => clearTimeout(loadingTimeout);
+  }, []); // Empty dependency array to run only once on mount
 
   return (
     <>
